@@ -84,7 +84,7 @@ def interactive_selector(stdscr, file_list):
 
 # ----------------------------------- cli app ----------------------------------
 
-parser = argparse.ArgumentParser(description="Quickly copy file tree to clipboard to paste into an LLM.")
+parser = argparse.ArgumentParser(description="Quickly copy relevant parts of a file tree to clipboard to paste into an LLM.")
 parser.add_argument("--edit", action="store_true", help="Edit .llm_info file")
 args = parser.parse_args()
 
