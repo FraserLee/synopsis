@@ -171,6 +171,7 @@ def interactive_selector(stdscr, root) -> Set[str]:
 
 parser = argparse.ArgumentParser(description="Quickly copy relevant parts of a file tree to clipboard to paste into an LLM.")
 parser.add_argument("--edit", action="store_true", help="Edit .llm_info file")
+parser.add_argument("--tag", action="store_true", help="Wrap output in <project> tag")
 args = parser.parse_args()
 
 llm_info_path = ".llm_info"
@@ -203,6 +204,7 @@ if len(selected_files) == 0 or args.edit:
 
 # Build the output from the selected file paths.
 output = []
+if args.tag: output.append("<project>")
 for path in sorted(selected_files):
     full_path = os.path.join(directory, path)
     try:
@@ -213,6 +215,7 @@ for path in sorted(selected_files):
     output.append(f"```\n{path.strip()}\n```")
     output.append(f"```\n{content.strip()}\n```")
     output.append("")
+if args.tag: output.append("</project>")
 
 output_text = "\n".join(output)
 
