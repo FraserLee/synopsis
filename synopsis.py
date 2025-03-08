@@ -49,7 +49,7 @@ def interactive_selector(stdscr, file_list):
     while True:
         stdscr.clear()
         height, width = stdscr.getmaxyx()
-        header = "Use ↑/↓ to navigate, SPACE to toggle, ENTER to finish. (Green = included, Red = excluded)"
+        header = "Use ↑/↓ or j/k to navigate, SPACE to toggle, ENTER to finish, q to quit. (Green = included, Red = excluded)"
         stdscr.addstr(0, 0, header[:width-1])
         # Display file list (starting from line 1).
         for idx, path in enumerate(file_list):
@@ -64,13 +64,14 @@ def interactive_selector(stdscr, file_list):
         stdscr.refresh()
 
         key = stdscr.getch()
-        if key == curses.KEY_UP and current_index > 0:
+        if key in (curses.KEY_UP, ord('k')) and current_index > 0:
             current_index -= 1
-        elif key == curses.KEY_DOWN and current_index < len(file_list) - 1:
+        elif key in (curses.KEY_DOWN, ord('j')) and current_index < len(file_list) - 1:
             current_index += 1
         elif key == ord(' '):
-            # Toggle inclusion for the current file.
             selections[current_index] = not selections[current_index]
+        elif key == ord('q'):
+            sys.exit(0)
         elif key in (curses.KEY_ENTER, 10, 13):
             # Finish selection on Enter key.
             break
@@ -78,7 +79,7 @@ def interactive_selector(stdscr, file_list):
     # Return only the file paths that remain selected.
     return [file_list[i] for i in range(len(file_list)) if selections[i]]
 
-parser = argparse.ArgumentParser(description="LLM Directory Summarizer")
+parser = argparse.ArgumentParser(description="Quickly copy file tree to clipboard to paste into an LLM.")
 parser.add_argument("--regen", action="store_true", help="Regenerate .llm_info file")
 args = parser.parse_args()
 
