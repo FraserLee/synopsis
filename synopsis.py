@@ -11,25 +11,27 @@ import sys
 import argparse
 import curses
 import pyperclip
-from typing import Optional
+from typing import Optional, Set
 
+selected_files: Set[str] = set()
 # ----------------------- build a copy of the filesystem -----------------------
 
 class Node:
     name: str
     path: str
     parent: Optional["Dir"]
-    selected: bool = False # is included in .llm_info
+    selected: bool # is included in .llm_info
 
     def __init__(self, name, path, parent):
         self.name = name
         self.path = path
         self.parent = parent
+        self.selected = path in selected_files
 
 class Dir(Node):
-    expanded: bool = False
+    expanded: bool
 
-    def __init__(self, name, path, parent=None):
+    def __init__(self, name, path, parent):
         super().__init__(name, path, parent)
 
         self.children = []
@@ -40,6 +42,14 @@ class Dir(Node):
 
         # directories first, then files - each alphabetically
         self.children.sort(key=lambda x: (not isinstance(x, Dir), x.name))
+
+        self.selected = all(child.selected for child in self.children)
+        self.expanded = any(
+            child.selected or (isinstance(child, Dir) and child.expanded)
+        for child in self.children)
+        self.selected = self.selected and len(self.children) > 0
+        self.expanded = self.expanded and len(self.children) > 0
+
 
 
 # ------------------------ display selector with curses ------------------------
@@ -61,7 +71,7 @@ def invert(node, direction=None):
         for child in node.children:
             invert(child, node.selected)
 
-def interactive_selector(stdscr, root) -> list[str]:
+def interactive_selector(stdscr, root) -> Set[str]:
 
     curses.curs_set(0)
     stdscr.nodelay(False)
@@ -145,6 +155,7 @@ def interactive_selector(stdscr, root) -> list[str]:
         elif key in (curses.KEY_ENTER, 10, 13):
             break
 
+
     def collect_selected(node: Node) -> list[str]:
 
         if isinstance(node, Dir):
@@ -154,7 +165,7 @@ def interactive_selector(stdscr, root) -> list[str]:
         else:
             return [node.path] if node.selected else []
 
-    return collect_selected(root)
+    return set(collect_selected(root))
 
 # ----------------------------------- cli app ----------------------------------
 
@@ -164,26 +175,27 @@ args = parser.parse_args()
 
 llm_info_path = ".llm_info"
 directory = os.getcwd()
-root = Dir(name=os.path.basename(directory), path="")
-root.expanded = True
 
 # First, read the .llm_info file
-selected_files = []
 if os.path.exists(llm_info_path):
     try:
         with open(llm_info_path, "r", encoding="utf-8") as f:
-            selected_files = [line.strip() for line in f if line.strip()]
+            selected_files = set([line.strip() for line in f if line.strip()])
     except Exception as e:
         print(f"Error reading {llm_info_path}: {e}")
         sys.exit(1)
 
 # If .llm_info does not exist, or is empty, or --edit is specified - run interactive selection.
 if len(selected_files) == 0 or args.edit:
+
+    root = Dir(os.path.basename(directory), "", None)
+    root.expanded = True
+
     selected_files = curses.wrapper(lambda stdscr: interactive_selector(stdscr, root))
     # Save the selected file paths.
     try:
         with open(llm_info_path, "w", encoding="utf-8") as f:
-            for path in selected_files:
+            for path in sorted(selected_files):
                 f.write(path + "\n")
     except Exception as e:
         print(f"Error writing {llm_info_path}: {e}")
@@ -191,7 +203,7 @@ if len(selected_files) == 0 or args.edit:
 
 # Build the output from the selected file paths.
 output = []
-for path in selected_files:
+for path in sorted(selected_files):
     full_path = os.path.join(directory, path)
     try:
         with open(full_path, "r", encoding="utf-8") as f:
