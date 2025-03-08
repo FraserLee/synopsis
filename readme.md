@@ -29,23 +29,23 @@ synopsis --edit # interactively add and remove files from `.llm_info`
 ```
 
 The clipboard output is formatted as
-```markdown
-\`\`\`
+````markdown
+```
 file 1 path
-\`\`\`
-\`\`\`
+```
+```
 file 1 contents
-\`\`\`
+```
 
-\`\`\`
+```
 file 2 path
-\`\`\`
-\`\`\`
+```
+```
 file 2 contents
-\`\`\`
+```
 
 etc.
-```
+````
 
 ## Possible Future Plans
 
