@@ -12,7 +12,6 @@ import argparse
 import curses
 import pyperclip
 
-
 def get_all_files(directory):
     """
     Recursively collects all file paths under the given directory.
@@ -54,7 +53,7 @@ def interactive_selector(stdscr, file_list):
         # Display file list (starting from line 1).
         for idx, path in enumerate(file_list):
             if idx >= height - 1:
-                break  # Avoid drawing beyond the window.
+                break
             color = curses.color_pair(1) if selections[idx] else curses.color_pair(2)
             # Highlight the current selection.
             if idx == current_index:
@@ -73,22 +72,24 @@ def interactive_selector(stdscr, file_list):
         elif key == ord('q'):
             sys.exit(0)
         elif key in (curses.KEY_ENTER, 10, 13):
-            # Finish selection on Enter key.
             break
 
     # Return only the file paths that remain selected.
     return [file_list[i] for i in range(len(file_list)) if selections[i]]
 
+
+# ----------------------------------- cli app ----------------------------------
+
 parser = argparse.ArgumentParser(description="Quickly copy file tree to clipboard to paste into an LLM.")
-parser.add_argument("--regen", action="store_true", help="Regenerate .llm_info file")
+parser.add_argument("--edit", action="store_true", help="Edit .llm_info file")
 args = parser.parse_args()
 
 llm_info_path = ".llm_info"
 directory = os.getcwd()
 file_list = get_all_files(directory)
 
-# If .llm_info does not exist or --regen is specified, run interactive selection.
-if args.regen or not os.path.exists(llm_info_path):
+# If .llm_info does not exist or --edit is specified, run interactive selection.
+if args.edit or not os.path.exists(llm_info_path):
     # Wrap the interactive_selector with curses.
     selected_files = curses.wrapper(lambda stdscr: interactive_selector(stdscr, file_list))
     # Save the selected file paths.
@@ -109,7 +110,7 @@ else:
         sys.exit(1)
 
 # Build the output from the selected file paths.
-output_lines = []
+output = []
 for path in selected_files:
     full_path = os.path.join(directory, path)
     try:
@@ -117,15 +118,14 @@ for path in selected_files:
             content = f.read()
     except Exception as e:
         content = f"[Error reading file: {e}]"
-    output_lines.append(f"\n{path}\n")
-    output_lines.append("```\n" + content + "\n```")
-    output_lines.append("\n")
-output_text = "\n".join(output_lines)
+    output.append(f"```\n{path}\n```")
+    output.append(f"```\n{content}\n```")
+    output.append("")
+output_text = "\n".join(output)
 
-# Print the massive output to stdout.
 print(output_text)
 
-# Copy the output to the clipboard.
+# output to the clipboard.
 try:
     pyperclip.copy(output_text)
     print("Output copied to clipboard.")
