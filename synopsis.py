@@ -83,14 +83,17 @@ def interactive_selector(stdscr, root) -> Set[str]:
         stdscr.clear()
         height, width = stdscr.getmaxyx()
 
-        header = ("Use ↑/↓ or j/k to navigate, "
-                  "←/h to collapse, →/l to expand, "
-                  "SPACE to toggle, ENTER to finish, q to quit.")
-        stdscr.addstr(0, 0, header[:width-1])
+        # header = "Use ↑/↓ or j/k to navigate, ←/h to collapse, →/l to expand, SPACE to toggle, ENTER to finish, q to quit."
+        header = ["Use ↑/↓ or j/k to navigate, ←/h to collapse, →/l to expand,",
+                 "SPACE to toggle, ENTER to finish, q to quit."]
+        # stdscr.addstr(0, 0, header[:width-1])
+        for i, line in enumerate(header):
+            stdscr.addstr(i, 0, line[:width-1])
+
 
         visible_list = get_visible_nodes(root, -1)[1:]  # Skip the root node
 
-        for i in range(window_pos, min(len(visible_list), window_pos + height - 1)):
+        for i in range(window_pos, min(len(visible_list), window_pos + height - len(header))):
             node, depth = visible_list[i]
 
             display_name = node.name
@@ -107,9 +110,12 @@ def interactive_selector(stdscr, root) -> Set[str]:
 
             colour = curses.color_pair(1) if node.selected else curses.color_pair(2)
             if i == current_index:
-                stdscr.addstr(i - window_pos + 1, 0, display_name[:width-1], colour | curses.A_REVERSE)
+                # stdscr.addstr(i - window_pos + 1, 0, display_name[:width-1], colour | curses.A_REVERSE)
+                stdscr.addstr(i - window_pos + len(header), 0, display_name[:width-1], colour | curses.A_REVERSE)
             else:
-                stdscr.addstr(i - window_pos + 1, 0, display_name[:width-1], colour)
+                # stdscr.addstr(i - window_pos + 1, 0, display_name[:width-1], colour)
+                stdscr.addstr(i - window_pos + len(header), 0, display_name[:width-1], colour)
+
 
         stdscr.refresh()
 
