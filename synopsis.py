@@ -1,19 +1,15 @@
-#!/usr/bin/env -S uv run --script
-# /// script
-# requires-python = "~=3.13"
-# dependencies = [
-# "pyperclip==1.9.0",
-# ]
-# ///
+#!/usr/bin/env python3
 
 import os
 import sys
-import argparse
 import curses
-import pyperclip
+import argparse
+import platform
+import subprocess
 from typing import Optional, Set
 
 selected_files: Set[str] = set()
+
 # ----------------------- build a copy of the filesystem -----------------------
 
 class Node:
@@ -223,7 +219,18 @@ print(output_text)
 
 # output to clipboard
 try:
-    pyperclip.copy(output_text)
-    print("Output copied to clipboard.")
+    system = platform.system()
+    if system == "Darwin":
+        subprocess.run("pbcopy", universal_newlines=True, input=output_text)
+    elif system == "Linux":
+        subprocess.run("xclip -selection clipboard", shell=True, universal_newlines=True, input=output_text)
+    elif system == "Windows":
+        subprocess.run("clip", universal_newlines=True, input=output_text)
+    else:
+        raise NotImplementedError(f"Unsupported OS: {system}")
+
+    print("Offering to inscrutable machine-gods copied to clipboard 🌌")
+
 except Exception as e:
     print(f"Failed to copy to clipboard: {e}")
+
