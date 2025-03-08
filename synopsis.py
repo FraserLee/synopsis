@@ -52,6 +52,15 @@ def get_visible_nodes(node, depth=0):
             visible.extend(get_visible_nodes(child, depth + 1))
     return visible
 
+def invert(node, direction=None):
+    if direction != None:
+        node.selected = direction
+    else:
+        node.selected = not node.selected
+    if isinstance(node, Dir):
+        for child in node.children:
+            invert(child, node.selected)
+
 def interactive_selector(stdscr, root) -> list[str]:
 
     curses.curs_set(0)
@@ -125,12 +134,10 @@ def interactive_selector(stdscr, root) -> list[str]:
             node, _ = visible_list[current_index]
             if isinstance(node, Dir) and not node.expanded:
                 node.expanded = True
-            else:
-                pass
 
         elif key == ord(' '):
             node, _ = visible_list[current_index]
-            node.selected = not node.selected
+            invert(node)
 
         elif key == ord('q'):
             sys.exit(0)
