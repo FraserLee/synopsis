@@ -2,11 +2,17 @@
 
 import os
 import sys
-import curses
 import argparse
 import platform
 import subprocess
 from typing import Optional, Set
+
+try:
+    import curses
+except ImportError:
+    print("This script requires the curses module.")
+    print("On Windows, there's some ways to go about installing it, but it's not there by default.")
+    sys.exit(1)
 
 selected_files: Set[str] = set()
 
