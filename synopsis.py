@@ -167,8 +167,18 @@ directory = os.getcwd()
 root = Dir(name=os.path.basename(directory), path="")
 root.expanded = True
 
-# If .llm_info does not exist or --edit is specified, run interactive selection.
-if args.edit or not os.path.exists(llm_info_path):
+# First, read the .llm_info file
+selected_files = []
+if os.path.exists(llm_info_path):
+    try:
+        with open(llm_info_path, "r", encoding="utf-8") as f:
+            selected_files = [line.strip() for line in f if line.strip()]
+    except Exception as e:
+        print(f"Error reading {llm_info_path}: {e}")
+        sys.exit(1)
+
+# If .llm_info does not exist, or is empty, or --edit is specified - run interactive selection.
+if len(selected_files) == 0 or args.edit:
     selected_files = curses.wrapper(lambda stdscr: interactive_selector(stdscr, root))
     # Save the selected file paths.
     try:
@@ -177,14 +187,6 @@ if args.edit or not os.path.exists(llm_info_path):
                 f.write(path + "\n")
     except Exception as e:
         print(f"Error writing {llm_info_path}: {e}")
-        sys.exit(1)
-else:
-    # Otherwise, read the .llm_info file for previously selected files.
-    try:
-        with open(llm_info_path, "r", encoding="utf-8") as f:
-            selected_files = [line.strip() for line in f if line.strip()]
-    except Exception as e:
-        print(f"Error reading {llm_info_path}: {e}")
         sys.exit(1)
 
 # Build the output from the selected file paths.
