@@ -79,59 +79,56 @@ def interactive_selector(stdscr, file_list):
     # Return only the file paths that remain selected.
     return [file_list[i] for i in range(len(file_list)) if selections[i]]
 
-def main():
-    parser = argparse.ArgumentParser(description="LLM Directory Summarizer")
-    parser.add_argument("--regen", action="store_true", help="Regenerate .llm_info file")
-    args = parser.parse_args()
+parser = argparse.ArgumentParser(description="LLM Directory Summarizer")
+parser.add_argument("--regen", action="store_true", help="Regenerate .llm_info file")
+args = parser.parse_args()
 
-    llm_info_path = ".llm_info"
-    directory = os.getcwd()
-    file_list = get_all_files(directory)
+llm_info_path = ".llm_info"
+directory = os.getcwd()
+file_list = get_all_files(directory)
 
-    # If .llm_info does not exist or --regen is specified, run interactive selection.
-    if args.regen or not os.path.exists(llm_info_path):
-        # Wrap the interactive_selector with curses.
-        selected_files = curses.wrapper(lambda stdscr: interactive_selector(stdscr, file_list))
-        # Save the selected file paths.
-        try:
-            with open(llm_info_path, "w", encoding="utf-8") as f:
-                for path in selected_files:
-                    f.write(path + "\n")
-        except Exception as e:
-            print(f"Error writing {llm_info_path}: {e}")
-            sys.exit(1)
-    else:
-        # Read the .llm_info file.
-        try:
-            with open(llm_info_path, "r", encoding="utf-8") as f:
-                selected_files = [line.strip() for line in f if line.strip()]
-        except Exception as e:
-            print(f"Error reading {llm_info_path}: {e}")
-            sys.exit(1)
-
-    # Build the output from the selected file paths.
-    output_lines = []
-    for path in selected_files:
-        full_path = os.path.join(directory, path)
-        try:
-            with open(full_path, "r", encoding="utf-8") as f:
-                content = f.read()
-        except Exception as e:
-            content = f"[Error reading file: {e}]"
-        output_lines.append(f"\n{path}\n")
-        output_lines.append("```\n" + content + "\n```")
-        output_lines.append("\n")
-    output_text = "\n".join(output_lines)
-
-    # Print the massive output to stdout.
-    print(output_text)
-
-    # Copy the output to the clipboard.
+# If .llm_info does not exist or --regen is specified, run interactive selection.
+if args.regen or not os.path.exists(llm_info_path):
+    # Wrap the interactive_selector with curses.
+    selected_files = curses.wrapper(lambda stdscr: interactive_selector(stdscr, file_list))
+    # Save the selected file paths.
     try:
-        pyperclip.copy(output_text)
-        print("Output copied to clipboard.")
+        with open(llm_info_path, "w", encoding="utf-8") as f:
+            for path in selected_files:
+                f.write(path + "\n")
     except Exception as e:
-        print(f"Failed to copy to clipboard: {e}")
+        print(f"Error writing {llm_info_path}: {e}")
+        sys.exit(1)
+else:
+    # Read the .llm_info file.
+    try:
+        with open(llm_info_path, "r", encoding="utf-8") as f:
+            selected_files = [line.strip() for line in f if line.strip()]
+    except Exception as e:
+        print(f"Error reading {llm_info_path}: {e}")
+        sys.exit(1)
 
-if __name__ == "__main__":
-    main()
+# Build the output from the selected file paths.
+output_lines = []
+for path in selected_files:
+    full_path = os.path.join(directory, path)
+    try:
+        with open(full_path, "r", encoding="utf-8") as f:
+            content = f.read()
+    except Exception as e:
+        content = f"[Error reading file: {e}]"
+    output_lines.append(f"\n{path}\n")
+    output_lines.append("```\n" + content + "\n```")
+    output_lines.append("\n")
+output_text = "\n".join(output_lines)
+
+# Print the massive output to stdout.
+print(output_text)
+
+# Copy the output to the clipboard.
+try:
+    pyperclip.copy(output_text)
+    print("Output copied to clipboard.")
+except Exception as e:
+    print(f"Failed to copy to clipboard: {e}")
+
