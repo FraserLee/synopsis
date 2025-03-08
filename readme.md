@@ -22,23 +22,30 @@ source ~/.zshenv
 ## Usage
 
 ```sh
-synopsis # copy every files listed in `.llm_info`, wrapped in code blocks, to
+synopsis # copy every file listed in `.llm_info`, wrapped in code blocks, to
          # the clipboard.
 
 synopsis --edit # interactively add and remove files from `.llm_info`
 ```
+This creates a file, `.llm_info`, which looks like
+```
+file1.txt
+foo/bar/file2.txt
+etc.
+```
 
 The clipboard output is formatted as
+
 ````markdown
 ```
-file 1 path
+file1.txt
 ```
 ```
 file 1 contents
 ```
 
 ```
-file 2 path
+foo/bar/file2.txt
 ```
 ```
 file 2 contents
