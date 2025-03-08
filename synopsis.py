@@ -34,8 +34,8 @@ def interactive_selector(stdscr, file_list):
     - Enter finishes selection.
     Returns the list of file paths that are selected.
     """
-    # All files are selected by default.
-    selections = [True] * len(file_list)
+    # No files are selected by default.
+    selections = [False] * len(file_list)
     current_index = 0
 
     # Curses setup.
@@ -46,7 +46,6 @@ def interactive_selector(stdscr, file_list):
     curses.init_pair(1, curses.COLOR_GREEN, -1)  # Included files
     curses.init_pair(2, curses.COLOR_RED, -1)    # Excluded files
 
-    # Main loop.
     while True:
         stdscr.clear()
         height, width = stdscr.getmaxyx()
