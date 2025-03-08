@@ -62,7 +62,7 @@ copy-pasting entire files into a chat prompt. I only wrote this to accelerate
 that process a bit, so plans for the future are pretty limited.
 
 That said, it might be worthwhile to query to some weaker model to summarize
-files that are too long to copy in full, pulling out externally visible
-functions and types, and any important context. Then again, context windows are
-pretty long these days, so a complete project dump might be fine for everything
-I'm looking to do, too.
+files that are too long to copy in full - pulling out externally visible
+functions and types, and any important context - then caching the response by
+the file hash. Then again, context windows are pretty long these days, so a
+complete project dump might be fine for everything I'm looking to do, too.
