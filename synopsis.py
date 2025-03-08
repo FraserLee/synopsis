@@ -11,29 +11,32 @@ import sys
 import argparse
 import curses
 import pyperclip
+from typing import Optional
 
 # ----------------------- build a copy of the filesystem -----------------------
 
 class Node:
     name: str
     path: str
+    parent: Optional["Dir"]
     selected: bool = False # is included in .llm_info
 
-    def __init__(self, name, path):
+    def __init__(self, name, path, parent):
         self.name = name
         self.path = path
+        self.parent = parent
 
 class Dir(Node):
     expanded: bool = False
 
-    def __init__(self, name, path):
-        super().__init__(name, path)
+    def __init__(self, name, path, parent=None):
+        super().__init__(name, path, parent)
 
         self.children = []
 
         for child in os.listdir(os.path.join(os.getcwd(), path)):
             full_path = os.path.join(path, child)
-            self.children.append(Dir(child, full_path) if os.path.isdir(full_path) else Node(child, full_path))
+            self.children.append(Dir(child, full_path, self) if os.path.isdir(full_path) else Node(child, full_path, self))
 
         # directories first, then files - each alphabetically
         self.children.sort(key=lambda x: (not isinstance(x, Dir), x.name))
@@ -110,8 +113,13 @@ def interactive_selector(stdscr, root) -> list[str]:
             node, _ = visible_list[current_index]
             if isinstance(node, Dir) and node.expanded:
                 node.expanded = False
-            else:
-                pass
+            elif node.parent and node.parent.parent:
+                node.parent.expanded = False
+                current_index = 0
+                for i, (n, _) in enumerate(visible_list):
+                    if n == node.parent:
+                        current_index = i
+                        break
 
         elif key in (curses.KEY_RIGHT, ord('l')):
             node, _ = visible_list[current_index]
