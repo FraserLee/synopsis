@@ -122,8 +122,8 @@ for path in selected_files:
             content = f.read()
     except Exception as e:
         content = f"[Error reading file: {e}]"
-    output.append(f"```\n{path}\n```")
-    output.append(f"```\n{content}\n```")
+    output.append(f"```\n{path.strip()}\n```")
+    output.append(f"```\n{content.strip()}\n```")
     output.append("")
 output_text = "\n".join(output)
 
@@ -135,4 +135,3 @@ try:
     print("Output copied to clipboard.")
 except Exception as e:
     print(f"Failed to copy to clipboard: {e}")
-
