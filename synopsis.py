@@ -45,28 +45,32 @@ def interactive_selector(stdscr, file_list):
     curses.init_pair(1, curses.COLOR_GREEN, -1)  # Included files
     curses.init_pair(2, curses.COLOR_RED, -1)    # Excluded files
 
+    window_pos = 0
     while True:
         stdscr.clear()
         height, width = stdscr.getmaxyx()
         header = "Use ↑/↓ or j/k to navigate, SPACE to toggle, ENTER to finish, q to quit. (Green = included, Red = excluded)"
         stdscr.addstr(0, 0, header[:width-1])
-        # Display file list (starting from line 1).
+
+        # Display files list, starting from window_pos.
         for idx, path in enumerate(file_list):
-            if idx >= height - 1:
-                break
+            if idx < window_pos: continue
+            if idx >= window_pos + height - 1: break
             color = curses.color_pair(1) if selections[idx] else curses.color_pair(2)
             # Highlight the current selection.
             if idx == current_index:
-                stdscr.addstr(idx+1, 0, path[:width-1], color | curses.A_REVERSE)
+                stdscr.addstr(idx+1-window_pos, 0, path[:width-1], color | curses.A_REVERSE)
             else:
-                stdscr.addstr(idx+1, 0, path[:width-1], color)
+                stdscr.addstr(idx+1-window_pos, 0, path[:width-1], color)
         stdscr.refresh()
 
         key = stdscr.getch()
         if key in (curses.KEY_UP, ord('k')) and current_index > 0:
             current_index -= 1
+            window_pos = max(0, min(window_pos, current_index - 3))
         elif key in (curses.KEY_DOWN, ord('j')) and current_index < len(file_list) - 1:
             current_index += 1
+            window_pos = max(0, max(window_pos, current_index - height + 5))
         elif key == ord(' '):
             selections[current_index] = not selections[current_index]
         elif key == ord('q'):
