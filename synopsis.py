@@ -199,7 +199,7 @@ directory = os.getcwd()
 if os.path.exists(llm_info_path):
     try:
         with open(llm_info_path, "r", encoding="utf-8") as f:
-            selected_files = set([line.strip() for line in f if line.strip()])
+            selected_files = set(line.strip() for line in f if line.strip())
     except Exception as e:
         print(f"Error reading {llm_info_path}: {e}")
         sys.exit(1)
