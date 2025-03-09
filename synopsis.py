@@ -276,10 +276,12 @@ for path in sorted(selected_files):
     try:
         with open(full_path, "r", encoding="utf-8") as f:
             content = f.read()
+            content = content.replace("\r\n", "\n")
+            content = ('\n' + content).replace("\n```", "\n\\`\\`\\`").strip()
     except Exception as e:
         content = f"[Error reading file: {e}]"
-    output_lines.append(f"```\n{path.strip()}\n```")
-    output_lines.append(f"```\n{content.strip()}\n```")
+    output_lines.append(f"```\n{path}\n```")
+    output_lines.append(f"```\n{content}\n```")
     output_lines.append("")
 if args.tag:
     output_lines.append("</project>")
