@@ -40,7 +40,10 @@ class Dir(Node):
 
         for child in os.listdir(os.path.join(os.getcwd(), path)):
             full_path = os.path.join(path, child)
-            self.children.append(Dir(child, full_path, self) if os.path.isdir(full_path) else Node(child, full_path, self))
+            if os.path.isdir(full_path):
+                self.children.append(Dir(child, full_path, self))
+            else:
+                self.children.append(Node(child, full_path, self))
 
         # directories first, then files - each alphabetically
         self.children.sort(key=lambda x: (not isinstance(x, Dir), x.name))
@@ -48,7 +51,8 @@ class Dir(Node):
         self.selected = all(child.selected for child in self.children)
         self.expanded = any(
             child.selected or (isinstance(child, Dir) and child.expanded)
-        for child in self.children)
+            for child in self.children
+        )
         self.selected = self.selected and len(self.children) > 0
         self.expanded = self.expanded and len(self.children) > 0
 
@@ -65,7 +69,7 @@ def get_visible_nodes(node, depth=0):
     return visible
 
 def invert(node, direction=None):
-    if direction != None:
+    if direction is not None:
         node.selected = direction
     else:
         node.selected = not node.selected
