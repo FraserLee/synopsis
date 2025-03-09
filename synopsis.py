@@ -93,10 +93,10 @@ def interactive_selector(stdscr, root) -> Set[str]:
         stdscr.clear()
         height, width = stdscr.getmaxyx()
 
-        # header = "Use ↑/↓ or j/k to navigate, ←/h to collapse, →/l to expand, SPACE to toggle, ENTER to finish, q to quit."
-        header = ["Use ↑/↓ or j/k to navigate, ←/h to collapse, →/l to expand,",
-                 "SPACE to toggle, ENTER to finish, q to quit."]
-        # stdscr.addstr(0, 0, header[:width-1])
+        header = [
+            "Use ↑/↓ or j/k to navigate, ←/h to collapse, →/l to expand,",
+            "SPACE to toggle, ENTER to finish, q to quit."
+        ]
         for i, line in enumerate(header):
             stdscr.addstr(i, 0, line[:width-1])
 
@@ -111,10 +111,16 @@ def interactive_selector(stdscr, root) -> Set[str]:
                 if node.expanded:  display_name = "📂 " + display_name
                 else:              display_name = "📁 " + display_name
             else:
-                display_name = {
-                    "py": "🐍 ", "rs": "🦀 ", "md": "📝 ", "txt": "📝 ", "sh":
-                    "🐚 ", "java": "☕️ "
-                }.get(node.name.split(".")[-1], "📄 ") + display_name
+                ext = node.name.split(".")[-1]
+                icon = {
+                    "py": "🐍 ",
+                    "rs": "🦀 ",
+                    "md": "📝 ",
+                    "txt": "📝 ",
+                    "sh": "🐚 ",
+                    "java": "☕️ "
+                }.get(ext, "📄 ")
+                display_name = icon + display_name
 
             display_name = ("    " * depth) + display_name
 
