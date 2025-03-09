@@ -220,11 +220,56 @@ if len(selected_files) == 0 or args.edit:
         print(f"Error writing {llm_info_path}: {e}")
         sys.exit(1)
 
-# -------------------- Build the final output --------------------
+# ---------------------------- git project structure ---------------------------
+
+project_structure = None
+try:
+    # Check if we're inside a git repository
+    result = subprocess.run(
+        ["git", "rev-parse", "--is-inside-work-tree"],
+        capture_output=True, text=True, check=True
+    )
+    if result.stdout.strip() == "true":
+        # Check if tree is installed
+        try:
+            subprocess.run(["tree", "--version"], capture_output=True, text=True, check=True)
+            tree_installed = True
+        except Exception:
+            tree_installed = False
+
+        if tree_installed:
+            # Use git ls-files piped to tree --fromfile
+            git_files = subprocess.run(
+                ["git", "ls-files"],
+                capture_output=True, text=True, check=True
+            )
+            tree_result = subprocess.run(
+                ["tree", "--fromfile"],
+                input=git_files.stdout, text=True, capture_output=True, check=True
+            )
+            project_structure = tree_result.stdout.strip()
+        else:
+            # Fallback: just list the tracked files
+            git_files = subprocess.run(
+                ["git", "ls-files"],
+                capture_output=True, text=True, check=True
+            )
+            project_structure = git_files.stdout.strip()
+except Exception:
+    project_structure = None
+
+# ----------------------------- build final output -----------------------------
 
 output_lines = []
 if args.tag:
     output_lines.append("<project>")
+if project_structure:
+    output_lines.append("Project structure:")
+    output_lines.append("```")
+    output_lines.append(project_structure)
+    output_lines.append("```")
+    output_lines.append("")  # blank line
+
 output_lines.append("Relevant files:")
 for path in sorted(selected_files):
     full_path = os.path.join(directory, path)
