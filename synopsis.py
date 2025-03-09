@@ -126,10 +126,8 @@ def interactive_selector(stdscr, root) -> Set[str]:
 
             colour = curses.color_pair(1) if node.selected else curses.color_pair(2)
             if i == current_index:
-                # stdscr.addstr(i - window_pos + 1, 0, display_name[:width-1], colour | curses.A_REVERSE)
                 stdscr.addstr(i - window_pos + len(header), 0, display_name[:width-1], colour | curses.A_REVERSE)
             else:
-                # stdscr.addstr(i - window_pos + 1, 0, display_name[:width-1], colour)
                 stdscr.addstr(i - window_pos + len(header), 0, display_name[:width-1], colour)
 
 
@@ -187,7 +185,9 @@ def interactive_selector(stdscr, root) -> Set[str]:
 
 # ----------------------------------- cli app ----------------------------------
 
-parser = argparse.ArgumentParser(description="Quickly copy relevant parts of a file tree to clipboard to paste into an LLM.")
+parser = argparse.ArgumentParser(
+    description="Quickly copy relevant parts of a file tree to clipboard to paste into an LLM."
+)
 parser.add_argument("--edit", action="store_true", help="Edit .llm_info file")
 parser.add_argument("--tag", action="store_true", help="Wrap output in <project> tag")
 args = parser.parse_args()
