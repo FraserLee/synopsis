@@ -220,9 +220,12 @@ if len(selected_files) == 0 or args.edit:
         print(f"Error writing {llm_info_path}: {e}")
         sys.exit(1)
 
-# Build the output from the selected file paths.
-output = []
-if args.tag: output.append("<project>")
+# -------------------- Build the final output --------------------
+
+output_lines = []
+if args.tag:
+    output_lines.append("<project>")
+output_lines.append("Relevant files:")
 for path in sorted(selected_files):
     full_path = os.path.join(directory, path)
     try:
@@ -230,12 +233,13 @@ for path in sorted(selected_files):
             content = f.read()
     except Exception as e:
         content = f"[Error reading file: {e}]"
-    output.append(f"```\n{path.strip()}\n```")
-    output.append(f"```\n{content.strip()}\n```")
-    output.append("")
-if args.tag: output.append("</project>")
+    output_lines.append(f"```\n{path.strip()}\n```")
+    output_lines.append(f"```\n{content.strip()}\n```")
+    output_lines.append("")
+if args.tag:
+    output_lines.append("</project>")
 
-output_text = "\n".join(output)
+output_text = "\n".join(output_lines)
 
 print(output_text)
 
