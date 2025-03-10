@@ -277,10 +277,8 @@ def get_language_hint(filename: str) -> str:
         except ClassNotFound:
             pass  # fall back to extension-based detection
 
-    # Fallback to extension-based detection
-    filename = filename.lower()
-    parts = filename.rsplit('.', 1)
-    extension = parts[-1] if len(parts) > 1 else ''
+    # Fallback to extension-based detection using os.path
+    extension = os.path.splitext(filename.lower())[1][1:]
 
     # Extensions that are used directly as language hints.
     self_mapping = {
