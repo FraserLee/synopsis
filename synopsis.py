@@ -14,13 +14,6 @@ except ImportError:
     print("On Windows, there's some ways to go about installing it, but it's not there by default.")
     sys.exit(1)
 
-try:
-    from pygments.lexers import get_lexer_for_filename
-    from pygments.util import ClassNotFound
-    PYGMENTS_AVAILABLE = True
-except ImportError:
-    PYGMENTS_AVAILABLE = False
-
 selected_files: Set[str] = set()
 
 # ----------------------- build a copy of the filesystem -----------------------
@@ -269,15 +262,6 @@ except Exception:
 
 def get_language_hint(filename: str) -> str:
     """Return a language hint for syntax highlighting based on the filename."""
-    # Try pygments first if available
-    if PYGMENTS_AVAILABLE:
-        try:
-            lexer = get_lexer_for_filename(filename)
-            return lexer.aliases[0]  # use first alias as it's typically the most common name
-        except ClassNotFound:
-            pass  # fall back to extension-based detection
-
-    # Fallback to extension-based detection using os.path
     extension = os.path.splitext(filename.lower())[1][1:]
 
     # Extensions that are used directly as language hints.
