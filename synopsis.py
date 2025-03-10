@@ -5,7 +5,7 @@ import sys
 import argparse
 import platform
 import subprocess
-from typing import Optional, Set
+from typing import Dict, Optional, Set
 
 try:
     import curses
@@ -260,48 +260,118 @@ except Exception:
 
 # ----------------------------- build final output -----------------------------
 
+_LANGUAGE_MAP: Dict[str, str] = {
+    "jsx": "jsx",
+    "tsx": "tsx",
+    "css": "css",
+    "less": "less",
+    "json": "json",
+    "html": "html",
+    "xml": "xml",
+    "yaml": "yaml",
+    "yml": "yml",
+    "toml": "toml",
+    "ini": "ini",
+    "cfg": "ini",
+    "conf": "ini",
+    "gradle": "gradle",
+    "php": "php",
+    "swift": "swift",
+    "sql": "sql",
+    "go": "go",
+    "java": "java",
+    "c": "c",
+    "cpp": "cpp",
+    "r": "r",
+    "rmd": "rmd",
+    "scala": "scala",
+    "hs": "haskell",
+    "elm": "elm",
+    "erl": "erlang",
+    "ex": "elixir",
+    "exs": "elixir",
+    "clj": "clojure",
+    "cljs": "clojure",
+    "vue": "vue",
+    "svelte": "svelte",
+    "mdx": "mdx",
+    "bat": "bat",
+    "groovy": "groovy",
+    "nim": "nim",
+    "v": "verilog",
+    "sv": "systemverilog",
+    "dart": "dart",
+    "fish": "fish",
+    "md": "markdown",
+    "py": "python",
+    "pyw": "python",
+    "pyi": "python",
+    "js": "javascript",
+    "mjs": "javascript",
+    "ts": "typescript",
+    "sh": "bash",
+    "bash": "bash",
+    "zsh": "bash",
+    "h": "c",
+    "hpp": "cpp",
+    "cs": "csharp",
+    "rs": "rust",
+    "rb": "ruby",
+    "erb": "ruby",
+    "pl": "perl",
+    "pm": "perl",
+    "kt": "kotlin",
+    "kts": "kotlin",
+    "coffee": "coffeescript",
+    "ps1": "powershell",
+    "psm1": "powershell",
+    "csx": "csharp",
+    "tex": "latex",
+    "mm": "objective-c++",
+    "f90": "fortran",
+    "f95": "fortran",
+    "jl": "julia",
+    "vhd": "vhdl",
+    "svh": "systemverilog",
+    "scss": "scss",
+    "sass": "sass",
+    "hbs": "handlebars",
+
+    # All other cases, like .txt, .log, etc. should be mapped to ""
+}
+
+_SPECIAL_FILENAMES: Dict[str, str] = {
+    "dockerfile": "dockerfile",
+    "makefile": "makefile",
+    "cmakelists.txt": "cmake",
+    ".bash_profile": "bash",
+    ".bashrc": "bash",
+    ".zshrc": "bash",
+    "procfile": "yaml",
+    "berksfile": "ruby",
+    "gemfile": "ruby",
+    "vagrantfile": "ruby",
+}
+
 def get_language_hint(filename: str) -> str:
-    """Return a language hint for syntax highlighting based on the filename."""
-    extension = os.path.splitext(filename.lower())[1][1:]
+    """Return a language hint for syntax highlighting based on the filename.
 
-    # Extensions that are used directly as language hints.
-    self_mapping = {
-        "jsx", "tsx", "css", "less", "json", "md", "html", "xml",
-        "yaml", "yml", "toml", "ini", "cfg", "conf", "gradle", "php",
-        "swift", "sql", "go", "java", "c", "cpp", "r", "rmd", "scala",
-        "hs", "elm", "erl", "ex", "exs", "clj", "cljs", "vue", "svelte",
-        "mdx", "bat", "groovy", "nim", "v", "sv", "dart", "fish"
-    }
-    if extension in self_mapping:
-        return extension
+    Args:
+        filename: Input filename to analyze, can include path components
 
-    # Extensions that need explicit mapping.
-    language_map = {
-        "py": "python",
-        "js": "javascript",
-        "ts": "typescript",
-        "txt": "text",
-        "sh": "bash",
-        "bash": "bash",
-        "zsh": "bash",
-        "hpp": "cpp",
-        "cs": "csharp",
-        "rs": "rust",
-        "rb": "ruby",
-        "pl": "perl",
-        "kt": "kotlin",
-        "coffee": "coffeescript",
-        "ps1": "powershell",
-        "psm1": "powershell",
-        "csx": "csharp",
-        "tex": "latex",
-        "mm": "objective-c++",
-        "f90": "fortran",
-        "f95": "fortran",
-        "jl": "julia",
-        "vhd": "vhdl",
-    }
-    return language_map.get(extension, "")
+    Returns:
+        Language identifier string compatible with common syntax highlighters,
+        or empty string if no appropriate mapping exists.
+    """
+    # Check special filenames first
+    basename = os.path.basename(filename.lower())
+    if basename in _SPECIAL_FILENAMES:
+        return _SPECIAL_FILENAMES[basename]
+
+    # Handle standard extensions
+    _, ext = os.path.splitext(filename.lower())
+    extension = ext.lstrip('.')
+    return _LANGUAGE_MAP.get(extension, "")
 
 output_lines = []
 if args.tag:
