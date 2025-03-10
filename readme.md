@@ -6,6 +6,7 @@ LLM, and to quickly edit what's included in the subset.
 ![1](https://raw.githubusercontent.com/FraserLee/readme_resources/main/screenshot%204.png)
 
 ## Installation
+
 ```sh
 # clone the repo
 git clone https://github.com/FraserLee/synopsis
@@ -27,8 +28,10 @@ synopsis # copy every file listed in `.llm_info`, wrapped in code blocks, to
 
 synopsis --edit # interactively add and remove files from `.llm_info`
 ```
+
 This creates a file, `.llm_info`, which looks like
-```
+
+```txt
 file1.txt
 foo/bar/file2.txt
 etc.
@@ -37,17 +40,13 @@ etc.
 The clipboard output is formatted as
 
 ````markdown
-```
 file1.txt
-```
-```
+```txt
 file 1 contents
 ```
 
-```
 foo/bar/file2.txt
-```
-```
+```txt
 file 2 contents
 ```
 
