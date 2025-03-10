@@ -6,8 +6,6 @@ import argparse
 import platform
 import subprocess
 from typing import Optional, Set
-from pygments.lexers import get_lexer_for_filename
-from pygments.util import ClassNotFound
 
 try:
     import curses
@@ -15,6 +13,13 @@ except ImportError:
     print("This script requires the curses module.")
     print("On Windows, there's some ways to go about installing it, but it's not there by default.")
     sys.exit(1)
+
+try:
+    from pygments.lexers import get_lexer_for_filename
+    from pygments.util import ClassNotFound
+    PYGMENTS_AVAILABLE = True
+except ImportError:
+    PYGMENTS_AVAILABLE = False
 
 selected_files: Set[str] = set()
 
@@ -262,6 +267,60 @@ except Exception:
 
 # ----------------------------- build final output -----------------------------
 
+def get_language_hint(filename: str) -> str:
+    """Return a language hint for syntax highlighting based on the filename."""
+    # Try pygments first if available
+    if PYGMENTS_AVAILABLE:
+        try:
+            lexer = get_lexer_for_filename(filename)
+            return lexer.aliases[0]  # use first alias as it's typically the most common name
+        except ClassNotFound:
+            pass  # fall back to extension-based detection
+
+    # Fallback to extension-based detection
+    filename = filename.lower()
+    parts = filename.rsplit('.', 1)
+    extension = parts[-1] if len(parts) > 1 else ''
+
+    # Extensions that are used directly as language hints.
+    self_mapping = {
+        "jsx", "tsx", "css", "less", "json", "md", "html", "xml",
+        "yaml", "yml", "toml", "ini", "cfg", "conf", "gradle", "php",
+        "swift", "sql", "go", "java", "c", "cpp", "r", "rmd", "scala",
+        "hs", "elm", "erl", "ex", "exs", "clj", "cljs", "vue", "svelte",
+        "mdx", "bat", "groovy", "nim", "v", "sv", "dart", "fish"
+    }
+    if extension in self_mapping:
+        return extension
+
+    # Extensions that need explicit mapping.
+    language_map = {
+        "py": "python",
+        "js": "javascript",
+        "ts": "typescript",
+        "txt": "text",
+        "sh": "bash",
+        "bash": "bash",
+        "zsh": "bash",
+        "hpp": "cpp",
+        "cs": "csharp",
+        "rs": "rust",
+        "rb": "ruby",
+        "pl": "perl",
+        "kt": "kotlin",
+        "coffee": "coffeescript",
+        "ps1": "powershell",
+        "psm1": "powershell",
+        "csx": "csharp",
+        "tex": "latex",
+        "mm": "objective-c++",
+        "f90": "fortran",
+        "f95": "fortran",
+        "jl": "julia",
+        "vhd": "vhdl",
+    }
+    return language_map.get(extension, "")
+
 output_lines = []
 if args.tag:
     output_lines.append("<project>")
@@ -283,12 +342,8 @@ for path in sorted(selected_files):
     except Exception as e:
         content = f"[Error reading file: {e}]"
 
-    # Get language name from pygments
-    try:
-        lexer = get_lexer_for_filename(path)
-        lang_hint = lexer.aliases[0]  # use first alias as it's typically the most common name
-    except ClassNotFound:
-        lang_hint = ""
+    # Get language hint based on file extension
+    lang_hint = get_language_hint(path)
 
     output_lines.append(f"\n{path}")
     output_lines.append(f"```{lang_hint}\n{content}\n```")
