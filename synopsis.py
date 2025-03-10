@@ -6,6 +6,8 @@ import argparse
 import platform
 import subprocess
 from typing import Optional, Set
+from pygments.lexers import get_lexer_for_filename
+from pygments.util import ClassNotFound
 
 try:
     import curses
@@ -280,9 +282,18 @@ for path in sorted(selected_files):
             content = ('\n' + content).replace("\n```", "\n\\`\\`\\`").strip()
     except Exception as e:
         content = f"[Error reading file: {e}]"
-    output_lines.append(f"```\n{path}\n```")
-    output_lines.append(f"```\n{content}\n```")
+
+    # Get language name from pygments
+    try:
+        lexer = get_lexer_for_filename(path)
+        lang_hint = lexer.aliases[0]  # use first alias as it's typically the most common name
+    except ClassNotFound:
+        lang_hint = ""
+
+    output_lines.append(f"\n{path}")
+    output_lines.append(f"```{lang_hint}\n{content}\n```")
     output_lines.append("")
+
 if args.tag:
     output_lines.append("</project>")
 
