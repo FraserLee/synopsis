@@ -260,101 +260,74 @@ except Exception:
 
 # ----------------------------- build final output -----------------------------
 
-_LANGUAGE_MAP: Dict[str, str] = {
-    "jsx": "jsx",
-    "tsx": "tsx",
-    "css": "css",
-    "less": "less",
-    "json": "json",
-    "html": "html",
-    "xml": "xml",
-    "yaml": "yaml",
-    "yml": "yml",
-    "toml": "toml",
-    "ini": "ini",
-    "cfg": "ini",
-    "conf": "ini",
-    "gradle": "gradle",
-    "php": "php",
-    "swift": "swift",
-    "sql": "sql",
-    "go": "go",
-    "java": "java",
-    "c": "c",
-    "cpp": "cpp",
-    "r": "r",
-    "rmd": "rmd",
-    "scala": "scala",
-    "hs": "haskell",
-    "elm": "elm",
-    "erl": "erlang",
-    "ex": "elixir",
-    "exs": "elixir",
-    "clj": "clojure",
-    "cljs": "clojure",
-    "vue": "vue",
-    "svelte": "svelte",
-    "mdx": "mdx",
-    "bat": "bat",
-    "groovy": "groovy",
-    "nim": "nim",
-    "v": "verilog",
-    "sv": "systemverilog",
-    "dart": "dart",
-    "fish": "fish",
-    "md": "markdown",
-    "py": "python",
-    "pyw": "python",
-    "pyi": "python",
-    "js": "javascript",
-    "mjs": "javascript",
-    "ts": "typescript",
-    "sh": "bash",
-    "bash": "bash",
-    "zsh": "bash",
-    "h": "c",
-    "hpp": "cpp",
-    "cs": "csharp",
-    "rs": "rust",
-    "rb": "ruby",
-    "erb": "ruby",
-    "pl": "perl",
-    "pm": "perl",
-    "kt": "kotlin",
-    "kts": "kotlin",
-    "coffee": "coffeescript",
-    "ps1": "powershell",
-    "psm1": "powershell",
-    "csx": "csharp",
-    "tex": "latex",
-    "mm": "objective-c++",
-    "f90": "fortran",
-    "f95": "fortran",
-    "jl": "julia",
-    "vhd": "vhdl",
-    "svh": "systemverilog",
-    "scss": "scss",
-    "sass": "sass",
-    "hbs": "handlebars",
-
-    # All other cases, like .txt, .log, etc. should be mapped to ""
-}
-
 _SPECIAL_FILENAMES: Dict[str, str] = {
-    "dockerfile": "dockerfile",
-    "makefile": "makefile",
-    "cmakelists.txt": "cmake",
     ".bash_profile": "bash",
     ".bashrc": "bash",
     ".zshrc": "bash",
-    "procfile": "yaml",
     "berksfile": "ruby",
+    "cmakelists.txt": "cmake",
+    "dockerfile": "dockerfile",
     "gemfile": "ruby",
+    "makefile": "makefile",
+    "procfile": "yaml",
     "vagrantfile": "ruby",
+}
+
+_LANGUAGE_MAP: Dict[str, str] = {
+    "bat": "bat",
+    "cfg": "ini",
+    "clj": "clojure",
+    "cljs": "clojure",
+    "coffee": "coffeescript",
+    "conf": "ini",
+    "cs": "csharp",
+    "csx": "csharp",
+    "erb": "ruby",
+    "erl": "erlang",
+    "ex": "elixir",
+    "exs": "elixir",
+    "f90": "fortran",
+    "f95": "fortran",
+    "groovy": "groovy",
+    "h": "c",
+    "hbs": "handlebars",
+    "hpp": "cpp",
+    "hs": "haskell",
+    "jl": "julia",
+    "js": "javascript",
+    "kt": "kotlin",
+    "kts": "kotlin",
+    "log": "",
+    "md": "markdown",
+    "mjs": "javascript",
+    "mm": "objective-c++",
+    "pl": "perl",
+    "pm": "perl",
+    "ps1": "powershell",
+    "psm1": "powershell",
+    "py": "python",
+    "pyi": "python",
+    "pyw": "python",
+    "rb": "ruby",
+    "rs": "rust",
+    "sh": "bash",
+    "sv": "systemverilog",
+    "svh": "systemverilog",
+    "tex": "latex",
+    "ts": "typescript",
+    "txt": "",
+    "v": "verilog",
+    "vhd": "vhdl",
+    "zsh": "bash",
 }
 
 def get_language_hint(filename: str) -> str:
     """Return a language hint for syntax highlighting based on the filename.
+
+    The logic works as follows:
+    - Special cases are handled using `_SPECIAL_FILENAMES`. E.g. "CMakeLists.txt" -> "cmake".
+    - Standard extensions are mapped using `_LANGUAGE_MAP`. E.g. "py" -> "python".
+    - The rest are mapped to their extension. E.g. "foo.bar" -> "bar".
 
     Args:
         filename: Input filename to analyze, can include path components
@@ -371,7 +344,7 @@ def get_language_hint(filename: str) -> str:
     # Handle standard extensions
     _, ext = os.path.splitext(filename.lower())
     extension = ext.lstrip('.')
-    return _LANGUAGE_MAP.get(extension, "")
+    return _LANGUAGE_MAP.get(extension, extension)
 
 output_lines = []
 if args.tag:

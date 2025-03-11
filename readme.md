@@ -32,21 +32,21 @@ synopsis --edit # interactively add and remove files from `.llm_info`
 This creates a file, `.llm_info`, which looks like
 
 ```txt
-file1.txt
-foo/bar/file2.txt
+file1.md
+foo/bar/file2.py
 etc.
 ```
 
 The clipboard output is formatted as
 
 ````markdown
-file1.txt
-```txt
+file1.md
+```markdown
 file 1 contents
 ```
 
-foo/bar/file2.txt
-```txt
+foo/bar/file2.py
+```python
 file 2 contents
 ```
 
