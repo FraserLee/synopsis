@@ -325,9 +325,12 @@ def get_language_hint(filename: str) -> str:
     """Return a language hint for syntax highlighting based on the filename.
 
     The logic works as follows:
-    - Special cases are handled using `_SPECIAL_FILENAMES`. E.g. "CMakeLists.txt" -> "cmake".
-    - Standard extensions are mapped using `_LANGUAGE_MAP`. E.g. "py" -> "python".
-    - The rest are mapped to their extension. E.g. "foo.bar" -> "bar".
+    - Special cases are handled using `_SPECIAL_FILENAMES`.
+      E.g. "CMakeLists.txt" -> "cmake".
+    - Standard extensions are mapped using `_LANGUAGE_MAP`.
+      E.g. "py" -> "python".
+    - The rest are mapped to their extension.
+      E.g. "foo.bar" -> "bar".
 
     Args:
         filename: Input filename to analyze, can include path components
