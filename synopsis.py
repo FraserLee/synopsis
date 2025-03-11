@@ -5,7 +5,7 @@ import sys
 import argparse
 import platform
 import subprocess
-from typing import Optional, Set
+from typing import Dict, Optional, Set
 
 try:
     import curses
@@ -260,6 +260,95 @@ except Exception:
 
 # ----------------------------- build final output -----------------------------
 
+_SPECIAL_FILENAMES: Dict[str, str] = {
+    ".bash_profile": "bash",
+    ".bashrc": "bash",
+    ".zshrc": "bash",
+    "berksfile": "ruby",
+    "cmakelists.txt": "cmake",
+    "dockerfile": "dockerfile",
+    "gemfile": "ruby",
+    "makefile": "makefile",
+    "procfile": "yaml",
+    "vagrantfile": "ruby",
+}
+
+_LANGUAGE_MAP: Dict[str, str] = {
+    "bat": "bat",
+    "cfg": "ini",
+    "clj": "clojure",
+    "cljs": "clojure",
+    "coffee": "coffeescript",
+    "conf": "ini",
+    "cs": "csharp",
+    "csx": "csharp",
+    "erb": "ruby",
+    "erl": "erlang",
+    "ex": "elixir",
+    "exs": "elixir",
+    "f90": "fortran",
+    "f95": "fortran",
+    "groovy": "groovy",
+    "h": "c",
+    "hbs": "handlebars",
+    "hpp": "cpp",
+    "hs": "haskell",
+    "jl": "julia",
+    "js": "javascript",
+    "kt": "kotlin",
+    "kts": "kotlin",
+    "log": "",
+    "md": "markdown",
+    "mjs": "javascript",
+    "mm": "objective-c++",
+    "pl": "perl",
+    "pm": "perl",
+    "ps1": "powershell",
+    "psm1": "powershell",
+    "py": "python",
+    "pyi": "python",
+    "pyw": "python",
+    "rb": "ruby",
+    "rs": "rust",
+    "sh": "bash",
+    "sv": "systemverilog",
+    "svh": "systemverilog",
+    "tex": "latex",
+    "ts": "typescript",
+    "txt": "",
+    "v": "verilog",
+    "vhd": "vhdl",
+    "zsh": "bash",
+}
+
+def get_language_hint(filename: str) -> str:
+    """Return a language hint for syntax highlighting based on the filename.
+
+    The logic works as follows:
+    - Special cases are handled using `_SPECIAL_FILENAMES`.
+      E.g. "CMakeLists.txt" -> "cmake".
+    - Standard extensions are mapped using `_LANGUAGE_MAP`.
+      E.g. "py" -> "python".
+    - The rest are mapped to their extension.
+      E.g. "foo.bar" -> "bar".
+
+    Args:
+        filename: Input filename to analyze, can include path components
+
+    Returns:
+        Language identifier string compatible with common syntax highlighters,
+        or empty string if no appropriate mapping exists.
+    """
+    # Check special filenames first
+    basename = os.path.basename(filename.lower())
+    if basename in _SPECIAL_FILENAMES:
+        return _SPECIAL_FILENAMES[basename]
+
+    # Handle standard extensions
+    _, ext = os.path.splitext(filename.lower())
+    extension = ext.lstrip('.')
+    return _LANGUAGE_MAP.get(extension, extension)
+
 output_lines = []
 if args.tag:
     output_lines.append("<project>")
@@ -280,9 +369,14 @@ for path in sorted(selected_files):
             content = ('\n' + content).replace("\n```", "\n\\`\\`\\`").strip()
     except Exception as e:
         content = f"[Error reading file: {e}]"
-    output_lines.append(f"```\n{path}\n```")
-    output_lines.append(f"```\n{content}\n```")
+
+    # Get language hint based on file extension
+    lang_hint = get_language_hint(path)
+
+    output_lines.append(f"\n{path}")
+    output_lines.append(f"```{lang_hint}\n{content}\n```")
     output_lines.append("")
+
 if args.tag:
     output_lines.append("</project>")
 
