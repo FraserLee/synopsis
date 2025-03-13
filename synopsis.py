@@ -293,6 +293,7 @@ _LANGUAGE_MAP: Dict[str, str] = {
     "hbs": "handlebars",
     "hpp": "cpp",
     "hs": "haskell",
+    "ino": "cpp",
     "jl": "julia",
     "js": "javascript",
     "kt": "kotlin",
