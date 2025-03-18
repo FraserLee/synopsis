@@ -189,7 +189,7 @@ parser = argparse.ArgumentParser(
     description="Quickly copy relevant parts of a file tree to clipboard to paste into an LLM."
 )
 parser.add_argument("--edit", action="store_true", help="Edit .llm_info file")
-parser.add_argument("--tag", action="store_true", help="Wrap output in <project> tag")
+parser.add_argument("--notag", action="store_true", help="Don't wrap output in <project> tag")
 args = parser.parse_args()
 
 llm_info_path = ".llm_info"
@@ -351,7 +351,7 @@ def get_language_hint(filename: str) -> str:
     return _LANGUAGE_MAP.get(extension, extension)
 
 output_lines = []
-if args.tag:
+if not args.notag:
     output_lines.append("<project>")
 if project_structure:
     output_lines.append("Project structure:")
@@ -378,7 +378,7 @@ for path in sorted(selected_files):
     output_lines.append(f"```{lang_hint}\n{content}\n```")
     output_lines.append("")
 
-if args.tag:
+if not args.notag:
     output_lines.append("</project>")
 
 output_text = "\n".join(output_lines)
