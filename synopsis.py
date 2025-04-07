@@ -5,6 +5,7 @@ import sys
 import argparse
 import platform
 import subprocess
+from pathlib import Path
 from typing import Dict, Optional, Set
 
 try:
@@ -190,6 +191,7 @@ parser = argparse.ArgumentParser(
 )
 parser.add_argument("--edit", action="store_true", help="Edit .llm_info file")
 parser.add_argument("--notag", action="store_true", help="Don't wrap output in <project> tag")
+parser.add_argument("--nostructure", action="store_true", help="Don't include a project structure tree in the output")
 args = parser.parse_args()
 
 llm_info_path = ".llm_info"
@@ -222,41 +224,89 @@ if len(selected_files) == 0 or args.edit:
 
 # ---------------------------- git project structure ---------------------------
 
-project_structure = None
-try:
-    # Check if we're inside a git repository
-    result = subprocess.run(
-        ["git", "rev-parse", "--is-inside-work-tree"],
-        capture_output=True, text=True, check=True
-    )
-    if result.stdout.strip() == "true":
-        # Check if tree is installed
-        try:
-            subprocess.run(["tree", "--version"], capture_output=True, text=True, check=True)
-            tree_installed = True
-        except Exception:
-            tree_installed = False
 
-        if tree_installed:
-            # Use git ls-files piped to tree --fromfile
-            git_files = subprocess.run(
-                ["git", "ls-files"],
-                capture_output=True, text=True, check=True
-            )
-            tree_result = subprocess.run(
-                ["tree", "--fromfile"],
-                input=git_files.stdout, text=True, capture_output=True, check=True
-            )
-            project_structure = tree_result.stdout.strip()
+import subprocess
+
+def build_tree(file_list):
+    tree = {}
+    for filepath in file_list:
+        parts = filepath.strip().split("/")
+        node = tree
+        for part in parts[:-1]:
+            node = node.setdefault(part, {})
+        node[parts[-1]] = None  # mark files as leaf nodes
+    return tree
+
+def collapse_unbranched(name, node):
+    # Collapse unbranched directories into a single path.
+    # For example, if dir1 has only one subdir dir2, merge them as "dir1/dir2".
+    path = name
+    current = node
+    while isinstance(current, dict) and len(current) == 1:
+        child_name, child_node = next(iter(current.items()))
+        if child_node is None:
+            break
+        path += "/" + child_name
+        current = child_node
+    return path, current
+
+def render_tree_with_budget(node, prefix="", budget=150, depth=0):
+    lines = []
+
+    children = sorted(node.items(), key=lambda x: (x[1] is None, x[0].lower()))
+    n = len(children)
+    if n == 0:
+        return lines
+
+    # Compute weights so that earlier children get more budget.
+    weights = [2 ** (n - i) for i in range(n)]
+    total_weight = sum(weights)
+    for i, (name, child) in enumerate(children):
+        if budget <= 0:
+            lines.append(prefix + "└── " + f"... (remaining {n - i} items)")
+            break
+        budget -= 1
+        connector = "└── " if i == n - 1 else "├── "
+        if child is not None:
+            collapsed_name, collapsed_child = collapse_unbranched(name, child)
+            lines.append(prefix + connector + collapsed_name + "/")
+            new_prefix = prefix + ("    " if connector.startswith("└") else "│   ")
+            allocated = max(0, int(budget * weights[i] / total_weight))
+            subtree_lines = render_tree_with_budget(collapsed_child, new_prefix, allocated, depth + 1)
+            lines.extend(subtree_lines)
+            budget -= allocated
         else:
-            # Fallback: just list the tracked files
+            lines.append(prefix + connector + name)
+    return lines
+
+def get_project_structure():
+    try:
+        git_check = subprocess.run(
+            ["git", "rev-parse", "--is-inside-work-tree"],
+            capture_output=True, text=True, check=True
+        )
+        if git_check.stdout.strip() == "true":
             git_files = subprocess.run(
                 ["git", "ls-files"],
                 capture_output=True, text=True, check=True
             )
-            project_structure = git_files.stdout.strip()
-except Exception:
-    project_structure = None
+            file_list = git_files.stdout.splitlines()
+        else:
+            file_list = [
+                str(item)[len(directory) + 1:]
+                for item in Path(directory).rglob("*")
+                if item.is_file()
+            ]
+
+        tree = build_tree(file_list)
+        lines = render_tree_with_budget(tree)
+        return "\n".join(lines)
+
+    except Exception as e:
+        print("Error obtaining project structure:", e)
+        return None
+
+project_structure = get_project_structure()
 
 # ----------------------------- build final output -----------------------------
 
@@ -353,7 +403,7 @@ def get_language_hint(filename: str) -> str:
 output_lines = []
 if not args.notag:
     output_lines.append("<project>")
-if project_structure:
+if project_structure and not args.nostructure:
     output_lines.append("Project structure:")
     output_lines.append("```")
     output_lines.append(project_structure)
